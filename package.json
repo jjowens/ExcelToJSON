@@ -1,0 +1,24 @@
+{
+  "name": "exceltojson",
+  "version": "1.0.0",
+  "description": "Exporting Excel Worksheets to JSON",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	  "exportjson": "node.exe .\\ExcelToJSON.js",
+    "exportdebug": "node.exe .\\ExcelDebug.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jjowens/ExcelToJSON.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jjowens/ExcelToJSON/issues"
+  },
+  "homepage": "https://github.com/jjowens/ExcelToJSON#readme",
+  "dependencies": {
+    "xlsx": "^0.16.9"
+  }
+}
