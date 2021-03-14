@@ -1,7 +1,6 @@
 /*const newFilename = process.env.npm_config_newfilename;
 console.log(newFilename);*/
 
-
 const fs = require('fs');
 
 const reader = require('xlsx');
@@ -17,6 +16,24 @@ const sheets = file.SheetNames;
 
 let debugJSON = [];
 
+function createHeaders(headers) {
+    let headerObjects = [];
+
+    for (let index = 0; index < headers.length; index++) {
+        let tempHeader = headers[index];
+        
+        let headerObj = {
+            headerOriginalText: tempHeader.trim(),
+            headerJSONLabel: tempHeader.trim().toLowerCase().replace(" ", "_"),
+            headerIndex: index
+        }
+
+        headerObjects.push(headerObj);
+    }
+
+    return headerObjects;
+}
+
 for(let i = 0; i < sheets.length; i++) {
     const sheetname = file.SheetNames[i];
 
@@ -24,6 +41,8 @@ for(let i = 0; i < sheets.length; i++) {
     newObj["SheetName"] = sheetname;
 
     const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]], {header: 1});
+    //console.log("Temp Details");
+    //console.log({temp});
 
     const worksheet = file.Sheets[file.SheetNames[i]];
     //console.log(temp);
@@ -36,15 +55,26 @@ for(let i = 0; i < sheets.length; i++) {
 
     newObj.data = [];
 
+    let rowHeaders = [];
+
+    let tempHeaders = temp[0];
+
+    let headerObjs = createHeaders(temp[0]);
+
+    //console.log({tempHeaders});
+    console.log({headerObjs});
+
     temp.forEach((res) => {
-        const newRow = [];
-
-        newRow[res[0]] = res[0];
-
-        newObj.data.push(newRow);
+        //const newRow = [];
+        //newRow[res[0]] = res[0];
+        //newObj.data.push(newRow);
         //console.log(res);
-        console.log(newRow);
+        //console.log({newRow});
+
+        //console.log("Row Details?")
+        //console.log({res});
     });
+
 
     data.push(newObj);
 }
