@@ -1,20 +1,24 @@
 const filePath = process.env.npm_config_filepath;
+let jsonFilePath = "data.json";
+let ignoreHeaders = [];
 
 if (filePath === undefined || "") {
-    throw Error("filepath to spreadsheet is not provided");
+    console.log("ERROR! 'filepath' parameter to spreadsheet is not provided");
+    return;
+}
+
+if (process.env.npm_config_jsonfilepath !== undefined) {
+    jsonFilePath = process.env.npm_config_jsonfilepath;
 }
 
 const fs = require('fs');
 const reader = require('xlsx');
 
-const jsonFileName = "data.json";
-const file = reader.readFile("./generic_multiple.xlsx");
+const file = reader.readFile(filePath);
 
 let data = [];
 
 const sheets = file.SheetNames;
-
-let debugJSON = [];
 
 function createHeaders(headers) {
     let headerObjects = [];
@@ -24,6 +28,7 @@ function createHeaders(headers) {
         
         let headerObj = {
             headerOriginalText: tempHeader.trim(),
+            headerLowerCase: castToLowerCase(tempHeader),
             headerJSONLabel: castToPascalCase(tempHeader),
             headerIndex: index,
             ignoreFlag: false
@@ -39,19 +44,35 @@ function castToPascalCase(val) {
     return val.trim().toLowerCase().replace(/ /g, "_");
 }
 
+function castToLowerCase(val) {
+    return val.trim().toLowerCase();
+}
+
+if (process.env.npm_config_ignoreheaders !== undefined) {
+    let tempIgnoreHeaders = process.env.npm_config_ignoreheaders.split(";");
+
+    for (let index = 0; index < tempIgnoreHeaders.length; index++) {
+        let tempIgnore = tempIgnoreHeaders[index];
+        
+        let tempIgnoreHeader = {
+            headerText: tempIgnore.trim(),
+            headerLowerCase: castToLowerCase(tempIgnore)
+        }
+
+        ignoreHeaders.push(tempIgnoreHeader);
+    }
+
+}
+
 for(let i = 0; i < sheets.length; i++) {
     const sheetname = file.SheetNames[i];
 
     const newObj = {};
-    newObj["SheetName"] = sheetname;
+    newObj["name"] = sheetname;
     const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]], {header: 1});
 
     // IGNORE FIRST ROW
-    newObj["NodesCount"] = temp.length - 1;
-
-    const worksheet = file.Sheets[file.SheetNames[i]];
-
-    debugJSON.push(worksheet);
+    newObj["count"] = temp.length - 1;
 
     newObj.data = [];
 
@@ -68,9 +89,18 @@ for(let i = 0; i < sheets.length; i++) {
         let record = {};
 
         for (let columnIndex = 0; columnIndex < row.length; columnIndex++) {
+            // CHECK IF THIS COLUMN SHOULD BE IGNORED
+            if (ignoreHeaders.length > 0) {
+                let ignoreFlag = ignoreHeaders.some(item => item.headerLowerCase == headerObjs[columnIndex].headerLowerCase);
+
+                if (ignoreFlag === true) {
+                    continue;
+                }
+            }
+            
             const column = row[columnIndex];
             const columnTitle = headerObjs[columnIndex].headerJSONLabel;
-            
+
             record[columnTitle] = column;
         }
 
@@ -81,10 +111,11 @@ for(let i = 0; i < sheets.length; i++) {
     data.push(newObj);
 }
 
+
 let jsonStr = JSON.stringify(data);
 
 // WRITE JSON DATA TO FILE
-fs.writeFile(jsonFileName, jsonStr, function (err) {
+fs.writeFile(jsonFilePath, jsonStr, function (err) {
     if (err) return console.log(err);
-    console.log('Completed Excel to JSON > ' + jsonFileName);
+    console.log('Completed converting Excel to JSON > ' + jsonFilePath);
 });
