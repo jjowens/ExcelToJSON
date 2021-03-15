@@ -6,9 +6,7 @@ const fs = require('fs');
 const reader = require('xlsx');
 
 const jsonFileName = "./debug.json";
-const file = reader.readFile("./dummy.xlsx");
-
-const debugFileName = "./debugging.txt";
+const file = reader.readFile("./generic_multiple.xlsx");
 
 let data = [];
 
@@ -24,8 +22,9 @@ function createHeaders(headers) {
         
         let headerObj = {
             headerOriginalText: tempHeader.trim(),
-            headerJSONLabel: tempHeader.trim().toLowerCase().replace(" ", "_"),
-            headerIndex: index
+            headerJSONLabel: castToPascalCase(tempHeader),
+            headerIndex: index,
+            ignoreFlag: false
         }
 
         headerObjects.push(headerObj);
@@ -34,64 +33,56 @@ function createHeaders(headers) {
     return headerObjects;
 }
 
+function castToPascalCase(val) {
+    return val.trim().toLowerCase().replace(/ /g, "_");
+}
+
 for(let i = 0; i < sheets.length; i++) {
     const sheetname = file.SheetNames[i];
 
     const newObj = {};
     newObj["SheetName"] = sheetname;
-
     const temp = reader.utils.sheet_to_json(file.Sheets[file.SheetNames[i]], {header: 1});
-    //console.log("Temp Details");
-    //console.log({temp});
+
+    // IGNORE FIRST ROW
+    newObj["NodesCount"] = temp.length - 1;
 
     const worksheet = file.Sheets[file.SheetNames[i]];
-    //console.log(temp);
-    //console.log(temp[0]);
-    //console.log(worksheet);
-    //console.table(temp);
-    //console.table(worksheet);
 
     debugJSON.push(worksheet);
 
     newObj.data = [];
 
-    let rowHeaders = [];
-
-    let tempHeaders = temp[0];
-
     let headerObjs = createHeaders(temp[0]);
 
-    //console.log({tempHeaders});
-    console.log({headerObjs});
+    for (let rowIndex = 0; rowIndex < temp.length; rowIndex++) {
+        // IGNORE FIRST ROW HEADER
+        if (rowIndex === 0) {
+            continue;
+        }
+        
+        let row = temp[rowIndex];
 
-    temp.forEach((res) => {
-        //const newRow = [];
-        //newRow[res[0]] = res[0];
-        //newObj.data.push(newRow);
-        //console.log(res);
-        //console.log({newRow});
+        let record = {};
 
-        //console.log("Row Details?")
-        //console.log({res});
-    });
+        for (let columnIndex = 0; columnIndex < row.length; columnIndex++) {
+            const column = row[columnIndex];
+            const columnTitle = headerObjs[columnIndex].headerJSONLabel;
+            
+            record[columnTitle] = column;
+        }
 
+        newObj.data.push(record);
+
+    }
 
     data.push(newObj);
 }
 
 let jsonStr = JSON.stringify(data);
 
-//console.log(jsonStr);
-
 // WRITE JSON DATA TO FILE
 fs.writeFile(jsonFileName, jsonStr, function (err) {
-    if (err) return console.log(err);
-    console.log('Completed Excel to JSON > ' + jsonFileName);
-});
-
-jsonStr = JSON.stringify(debugJSON);
-
-fs.writeFile(debugFileName, jsonStr, function (err) {
     if (err) return console.log(err);
     console.log('Completed Excel to JSON > ' + jsonFileName);
 });
