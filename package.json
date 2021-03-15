@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-	  "exportjson": "node.exe .\\ExcelToJSON.js",
-    "exportdebug": "node.exe .\\ExcelDebug.js"
+	  "exportjson": "node.exe .\\ExcelToJSON.js"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
 const filePath = process.env.npm_config_filepath;
 let jsonFilePath = "data.json";
 let ignoreHeaders = [];
+let ignoreSheets = [];
 
 if (filePath === undefined || "") {
     console.log("ERROR! 'filepath' parameter to spreadsheet is not provided");
@@ -30,8 +31,7 @@ function createHeaders(headers) {
             headerOriginalText: tempHeader.trim(),
             headerLowerCase: castToLowerCase(tempHeader),
             headerJSONLabel: castToPascalCase(tempHeader),
-            headerIndex: index,
-            ignoreFlag: false
+            headerIndex: index
         }
 
         headerObjects.push(headerObj);
@@ -48,6 +48,7 @@ function castToLowerCase(val) {
     return val.trim().toLowerCase();
 }
 
+// SET IGNORE HEADERS
 if (process.env.npm_config_ignoreheaders !== undefined) {
     let tempIgnoreHeaders = process.env.npm_config_ignoreheaders.split(";");
 
@@ -64,8 +65,35 @@ if (process.env.npm_config_ignoreheaders !== undefined) {
 
 }
 
+// SET IGNORE SHEETS
+if (process.env.npm_config_ignoresheets !== undefined) {
+    let tempIgnoreSheets = process.env.npm_config_ignoresheets.split(";");
+
+    for (let index = 0; index < tempIgnoreSheets.length; index++) {
+        let tempIgnore = tempIgnoreSheets[index];
+        
+        let tempIgnoreSheet = {
+            sheetName: tempIgnore.trim(),
+            sheetNameLowerCase: castToLowerCase(tempIgnore),
+        }
+
+        ignoreSheets.push(tempIgnoreSheet);
+    }
+
+}
+
 for(let i = 0; i < sheets.length; i++) {
     const sheetname = file.SheetNames[i];
+    const sheetnameLowercase = castToLowerCase(sheetname);
+
+    // CHECK IF THIS WORKSHEET SHOULD BE IGNORED
+    if (ignoreSheets.length > 0) {
+        let ignoreFlag = ignoreSheets.some(item => item.sheetNameLowerCase == sheetnameLowercase);
+
+        if (ignoreFlag === true) {
+            continue;
+        }
+    }
 
     const newObj = {};
     newObj["name"] = sheetname;
