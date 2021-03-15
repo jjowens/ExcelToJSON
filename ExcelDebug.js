@@ -1,11 +1,13 @@
-/*const newFilename = process.env.npm_config_newfilename;
-console.log(newFilename);*/
+const filePath = process.env.npm_config_filepath;
+
+if (filePath === undefined || "") {
+    throw Error("filepath to spreadsheet is not provided");
+}
 
 const fs = require('fs');
-
 const reader = require('xlsx');
 
-const jsonFileName = "./debug.json";
+const jsonFileName = "data.json";
 const file = reader.readFile("./generic_multiple.xlsx");
 
 let data = [];
